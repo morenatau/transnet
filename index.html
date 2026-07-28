@@ -62,7 +62,7 @@
   .nav-item:hover .nav-label{color:var(--red);}
   .nav-item:hover .car{color:var(--red);}
   .dropdown{
-    position:absolute;top:100%;left:0;margin-top:14px;background:#f4f4f4;
+    position:absolute;top:100%;left:0;margin-top:0;background:#f4f4f4;
     min-width:230px;padding:14px 0;display:none;flex-direction:column;
     box-shadow:0 10px 24px rgba(0,0,0,.1);z-index:60;
   }
@@ -70,6 +70,11 @@
   .dropdown a{padding:11px 26px;font-size:15px;font-weight:400;color:#333;white-space:nowrap;}
   .dropdown a:hover{color:var(--red);}
   .search-icon{font-size:22px;color:#333;position:absolute;right:55px;top:38px;}
+  .hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;width:30px;height:24px;background:none;border:none;cursor:pointer;padding:0;position:absolute;right:100px;top:40px;z-index:100;}
+  .hamburger span{display:block;width:100%;height:3px;background:#2b2b2b;border-radius:2px;transition:transform .25s ease,opacity .25s ease;}
+  .hamburger.active span:nth-child(1){transform:translateY(8px) rotate(45deg);}
+  .hamburger.active span:nth-child(2){opacity:0;}
+  .hamburger.active span:nth-child(3){transform:translateY(-8px) rotate(-45deg);}
 
   /* ===== HERO SLIDER ===== */
   .hero{
@@ -198,8 +203,23 @@
     .footer-top{grid-template-columns:1fr;}
     .footer-logo-col,.footer-heading-col,.footer-desc-col,.footer-address-col,.footer-whistle-col{grid-column:1;grid-row:auto;padding-top:22px;}
     .hero-title{font-size:34px;}
-    nav{display:none;}
     header{justify-content:flex-start;}
+    .hamburger{display:flex;}
+    nav{
+      display:none;flex-direction:column;gap:0;width:100%;position:absolute;
+      top:100%;left:0;background:#fff;box-shadow:0 14px 28px rgba(0,0,0,.14);
+      padding:8px 0;z-index:90;
+    }
+    header.nav-open nav{display:flex;}
+    .nav-item{width:100%;}
+    .nav-item .l1{padding:14px 26px;justify-content:space-between;}
+    .nav-item .l2{padding:0 26px 14px;}
+    .dropdown{
+      position:static;display:none;width:100%;box-shadow:none;background:#f7f7f7;
+      margin-top:0;padding:6px 0;
+    }
+    .nav-item.open .dropdown{display:flex;}
+    .dropdown a{padding:10px 40px;}
   }
   @media (max-width:520px){
     .div-grid{grid-template-columns:repeat(2,1fr);}
@@ -219,7 +239,7 @@
   </div>
     <nav>
     <div class="nav-item">
-      <a href="#" class="nav-label"><span class="l1">About <i class="car">▾</i></span><span class="l2">Us</span></a>
+      <a href="#" class="nav-label" onclick="handleNavLabelClick(event,this)"><span class="l1">About <i class="car">▾</i></span><span class="l2">Us</span></a>
       <div class="dropdown">
         <a href="#">Overview</a>
         <a href="#">Our History</a>
@@ -233,7 +253,7 @@
       </div>
     </div>
     <div class="nav-item">
-      <a href="#" class="nav-label"><span class="l1">Our <i class="car">▾</i></span><span class="l2">Divisions</span></a>
+      <a href="#" class="nav-label" onclick="handleNavLabelClick(event,this)"><span class="l1">Our <i class="car">▾</i></span><span class="l2">Divisions</span></a>
       <div class="dropdown">
         <a href="#">Transnet Engineering</a>
         <a href="#">Transnet Rail Infrastructure Manager</a>
@@ -242,10 +262,11 @@
         <a href="#">Transnet National Port Authority</a>
         <a href="#">Transnet Pipelines</a>
         <a href="#">Transnet Property</a>
+        <a href="supply-chain.html">Supply Chain</a>
       </div>
     </div>
     <div class="nav-item">
-      <a href="#" class="nav-label"><span class="l1">Investor <i class="car">▾</i></span><span class="l2">Relations</span></a>
+      <a href="#" class="nav-label" onclick="handleNavLabelClick(event,this)"><span class="l1">Investor <i class="car">▾</i></span><span class="l2">Relations</span></a>
       <div class="dropdown">
         <a href="#">Annual Results</a>
         <a href="#">Governance</a>
@@ -256,17 +277,17 @@
       </div>
     </div>
     <div class="nav-item">
-      <a href="#" class="nav-label"><span class="l1">Business <i class="car">▾</i></span><span class="l2">With Us</span></a>
+      <a href="#" class="nav-label" onclick="handleNavLabelClick(event,this)"><span class="l1">Business <i class="car">▾</i></span><span class="l2">With Us</span></a>
       <div class="dropdown">
         <a href="#">Private Sector Participation</a>
-        <a href="#">Transnet Tenders</a>
+        <a href="tenders.html">Transnet Tenders</a>
         <a href="#">B-BBEE GUIDE</a>
         <a href="#">Localisation &amp; ESD</a>
         <a href="#">Legal Notices</a>
       </div>
     </div>
     <div class="nav-item">
-      <a href="#" class="nav-label"><span class="l1">Transnet <i class="car">▾</i></span><span class="l2">Academy</span></a>
+      <a href="#" class="nav-label" onclick="handleNavLabelClick(event,this)"><span class="l1">Transnet <i class="car">▾</i></span><span class="l2">Academy</span></a>
       <div class="dropdown">
         <a href="#">Overview</a>
         <a href="#">Our Services</a>
@@ -277,7 +298,7 @@
       </div>
     </div>
     <div class="nav-item">
-      <a href="#" class="nav-label"><span class="l1">Media <i class="car">▾</i></span></a>
+      <a href="#" class="nav-label" onclick="handleNavLabelClick(event,this)"><span class="l1">Media <i class="car">▾</i></span></a>
       <div class="dropdown">
         <a href="#">Media Centre</a>
         <a href="#">Class Notice</a>
@@ -287,14 +308,14 @@
       </div>
     </div>
     <div class="nav-item">
-      <a href="#" class="nav-label"><span class="l1">Careers <i class="car">▾</i></span></a>
+      <a href="#" class="nav-label" onclick="handleNavLabelClick(event,this)"><span class="l1">Careers <i class="car">▾</i></span></a>
       <div class="dropdown">
         <a href="#">A Career With Transnet</a>
         <a href="#">Youth Development Programmes</a>
       </div>
     </div>
     <div class="nav-item">
-      <a href="#" class="nav-label"><span class="l1">PAIA / <i class="car">▾</i></span><span class="l2">POPIA</span></a>
+      <a href="#" class="nav-label" onclick="handleNavLabelClick(event,this)"><span class="l1">PAIA / <i class="car">▾</i></span><span class="l2">POPIA</span></a>
       <div class="dropdown">
         <a href="#">PAIA</a>
         <a href="#">POPIA</a>
@@ -303,6 +324,9 @@
   </nav>
   </div>
   <span class="search-icon">🔍</span>
+  <button class="hamburger" aria-label="Toggle menu" onclick="toggleMobileNav()">
+    <span></span><span></span><span></span>
+  </button>
 </header>
 
 <!-- HERO SLIDER -->
@@ -480,6 +504,21 @@
     dots[current].classList.add('active');
   }
   setInterval(()=>{ goToSlide((current+1) % slides.length); }, 4500);
+
+  function toggleMobileNav(){
+    document.querySelector('header').classList.toggle('nav-open');
+    document.querySelector('.hamburger').classList.toggle('active');
+  }
+
+  function handleNavLabelClick(e, el){
+    if (window.innerWidth <= 900) {
+      e.preventDefault();
+      const item = el.closest('.nav-item');
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.nav-item.open').forEach(i => { if (i !== item) i.classList.remove('open'); });
+      item.classList.toggle('open', !wasOpen);
+    }
+  }
 </script>
 
 </body>

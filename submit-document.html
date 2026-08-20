@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vendor Document Submission Portal &ndash; Transnet</title>
+<meta name="description" content="Official Transnet e-Submission Portal for uploading tender proposals, RFQ responses, and vendor compliance documentation directly to Transnet.">
+<meta name="robots" content="noindex, nofollow">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --red:#c41e3a;
+    --red-dark:#8e1729;
+    --gold:#e0a94a;
+    --navy:#1f2a3c;
+    --navy-dark:#161e2b;
+    --ink:#2b2b2b;
+    --grey-bg:#eef0f1;
+    --grey-line:#e2e2e2;
+    --green:#5c7a4a;
+    --olive:#8a8a3e;
+    --teal:#3f7d8c;
+    --blue:#2e5f8a;
+    --tan:#b89a3e;
+    --font: "Open Sans", Arial, Helvetica, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:var(--font);color:var(--ink);background:#fff;}
+  a{text-decoration:none;color:inherit;}
+  ul{list-style:none;margin:0;padding:0;}
+  img{max-width:100%;display:block;}
+
+  /* ===== HEADER ===== */
+  header{
+    display:flex;align-items:flex-start;justify-content:center;position:relative;
+    padding:36px 55px 26px;border-bottom:1px solid var(--grey-line);
+    flex-wrap:wrap;gap:24px;background:#fff;z-index:100;
+  }
+  .brand-nav{display:flex;align-items:flex-start;gap:56px;flex-wrap:wrap;}
+  .logo{display:flex;flex-direction:column;gap:10px;}
+  .logo .wordmark{font-weight:800;font-size:23px;letter-spacing:.5px;color:var(--red);}
+  .logo .mark{width:56px;height:37px;}
+  .logo .mark img{width:100%;height:100%;display:block;object-fit:contain;}
+  nav{display:flex;gap:36px;font-size:19px;font-weight:400;color:#2b2b2b;flex-wrap:wrap;align-items:flex-start;padding-top:6px;}
+  .nav-item{position:relative;display:flex;flex-direction:column;line-height:1.35;}
+  .nav-item .l1{display:flex;align-items:center;gap:6px;white-space:nowrap;}
+  .nav-item .l2{white-space:nowrap;}
+  .car{font-size:11px;color:#9a9a9a;font-style:normal;margin-top:2px;}
+  .nav-label{color:inherit;text-decoration:none;}
+  .nav-item:hover .nav-label{color:var(--red);}
+  .nav-item:hover .car{color:var(--red);}
+  .dropdown{
+    position:absolute;top:100%;left:0;margin-top:0;background:#f4f4f4;
+    min-width:230px;padding:14px 0;display:none;flex-direction:column;
+    box-shadow:0 10px 24px rgba(0,0,0,.1);z-index:60;
+  }
+  .nav-item:hover .dropdown{display:flex;}
+  .dropdown a{padding:11px 26px;font-size:15px;font-weight:400;color:#333;white-space:nowrap;}
+  .dropdown a:hover{color:var(--red);}
+  .search-icon{font-size:22px;color:#333;position:absolute;right:55px;top:38px;}
+  .hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;width:30px;height:24px;background:none;border:none;cursor:pointer;padding:0;position:absolute;right:100px;top:40px;z-index:100;}
+  .hamburger span{display:block;width:100%;height:3px;background:#2b2b2b;border-radius:2px;transition:transform .25s ease,opacity .25s ease;}
+  .hamburger.active span:nth-child(1){transform:translateY(8px) rotate(45deg);}
+  .hamburger.active span:nth-child(2){opacity:0;}
+  .hamburger.active span:nth-child(3){transform:translateY(-8px) rotate(-45deg);}
+
+  /* ===== PAGE BANNER ===== */
+  .page-banner{background:var(--red);color:#fff;padding:60px 40px 50px;text-align:center;}
+  .breadcrumb{font-size:13px;letter-spacing:1px;opacity:.85;margin-bottom:14px;}
+  .breadcrumb a{color:#fff;text-decoration:underline;}
+  .page-banner h1{font-size:clamp(32px,5vw,54px);font-weight:800;margin:0 0 10px;text-transform:uppercase;letter-spacing:1px;}
+  .page-banner p{font-size:15px;max-width:750px;margin:0 auto;opacity:0.92;line-height:1.6;}
+
+  /* ===== PORTAL SECTION ===== */
+  .portal-wrap{max-width:1150px;margin:50px auto;padding:0 40px 70px;}
+
+  .cloud-config-bar{
+    background:var(--grey-bg);border:1px solid var(--grey-line);
+    border-left:5px solid var(--red);padding:18px 24px;margin-bottom:34px;
+    display:flex;align-items:center;justify-content:space-between;gap:20px;
+  }
+  .config-info{display:flex;align-items:center;gap:14px;}
+  .config-badge{
+    background:var(--red);color:#fff;font-size:11px;font-weight:700;
+    text-transform:uppercase;padding:5px 12px;border-radius:14px;letter-spacing:.5px;
+  }
+  .config-text{font-size:13.5px;color:var(--ink);margin:0;}
+  .config-text strong{color:var(--navy);}
+  .btn-config-settings{
+    background:var(--navy);color:#fff;border:none;padding:10px 20px;
+    font-size:13px;font-weight:700;border-radius:18px;cursor:pointer;
+    transition:background .2s;white-space:nowrap;
+  }
+  .btn-config-settings:hover{background:var(--navy-dark);}
+
+  .portal-card{
+    background:#fff;border:1px solid var(--grey-line);
+    box-shadow:0 10px 30px rgba(0,0,0,.05);
+  }
+  .card-header{
+    background:var(--navy);color:#fff;padding:20px 30px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .card-header h2{font-size:19px;font-weight:700;margin:0;color:#fff;}
+  .step-pill{font-size:12px;font-weight:700;background:rgba(255,255,255,.15);color:#fff;padding:4px 12px;border-radius:12px;}
+
+  .card-body{padding:36px;}
+
+  .form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;margin-bottom:30px;}
+  .form-group{display:flex;flex-direction:column;gap:8px;}
+  .form-group.full-width{grid-column:span 2;}
+  .form-group label{font-size:14px;font-weight:700;color:var(--navy);}
+  .form-group label span{color:var(--red);}
+  .form-control{
+    padding:12px 16px;border:1px solid var(--grey-line);background:#fff;
+    font-size:14px;font-family:var(--font);color:var(--ink);
+    transition:border-color .2s;
+  }
+  .form-control:focus{outline:none;border-color:var(--red);}
+  select.form-control{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%3C333333' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px;}
+
+  /* DROPZONE */
+  .dropzone{
+    border:2px dashed var(--grey-line);background:var(--grey-bg);
+    padding:44px 20px;text-align:center;cursor:pointer;transition:all .25s ease;
+  }
+  .dropzone:hover, .dropzone.dragover{border-color:var(--red);background:#fef2f4;}
+  .drop-icon{
+    width:56px;height:56px;border-radius:50%;background:#fee2e2;color:var(--red);
+    display:inline-flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:14px;
+  }
+  .drop-title{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:6px;}
+  .drop-sub{font-size:13px;color:#666;margin-bottom:18px;}
+  .btn-select{
+    display:inline-block;background:var(--red);color:#fff;font-size:13px;
+    font-weight:700;padding:10px 24px;border-radius:18px;transition:background .2s;
+  }
+  .dropzone:hover .btn-select{background:var(--red-dark);}
+
+  /* FILE PREVIEW */
+  .file-preview-list{margin-top:24px;display:flex;flex-direction:column;gap:12px;}
+  .file-item{
+    display:flex;align-items:center;justify-content:space-between;
+    background:#fff;border:1px solid var(--grey-line);padding:14px 20px;
+  }
+  .file-info{display:flex;align-items:center;gap:14px;}
+  .file-icon{
+    width:42px;height:42px;background:var(--navy);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;
+  }
+  .file-name{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:2px;}
+  .file-size{font-size:12px;color:#666;}
+  .btn-remove{background:none;border:none;color:var(--red);font-size:20px;cursor:pointer;padding:4px 8px;}
+
+  /* PROGRESS BAR */
+  .progress-wrap{margin-top:24px;display:none;}
+  .progress-header{display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:8px;color:var(--navy);}
+  .progress-bar-bg{width:100%;height:10px;background:var(--grey-line);border-radius:5px;overflow:hidden;}
+  .progress-bar-fill{height:100%;width:0%;background:var(--red);transition:width .2s ease;}
+
+  /* SUBMIT BUTTON */
+  .form-actions{margin-top:36px;padding-top:24px;border-top:1px solid var(--grey-line);display:flex;justify-content:flex-end;}
+  .btn-submit-cloud{
+    display:inline-block;background:var(--red);color:#fff;font-size:14px;font-weight:700;
+    padding:13px 36px;border-radius:20px;border:none;cursor:pointer;letter-spacing:.3px;
+  }
+  .btn-submit-cloud:hover{background:var(--red-dark);}
+  .btn-submit-cloud:disabled{opacity:0.5;cursor:not-allowed;}
+
+  /* MODALS */
+  .modal-overlay{
+    position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,14,20,.75);
+    display:none;align-items:center;justify-content:center;z-index:1000;padding:20px;
+  }
+  .modal-box{background:#fff;width:100%;max-width:540px;box-shadow:0 20px 40px rgba(0,0,0,.3);overflow:hidden;}
+  .modal-header{background:var(--navy);color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;}
+  .modal-header h3{margin:0;font-size:18px;font-weight:700;color:#fff;}
+  .modal-body{padding:26px;text-align:center;}
+  .success-icon{width:60px;height:60px;border-radius:50%;background:#eef7ed;color:var(--green);display:inline-flex;align-items:center;justify-content:center;font-size:30px;margin-bottom:16px;}
+  .ref-box{background:var(--grey-bg);border:1px dashed var(--grey-line);padding:14px;margin:20px 0;font-family:monospace;font-size:20px;font-weight:800;color:var(--navy);letter-spacing:2px;}
+  .modal-footer{padding:16px 24px;background:var(--grey-bg);border-top:1px solid var(--grey-line);display:flex;justify-content:center;gap:12px;}
+
+  /* ===== FOOTER ===== */
+  footer{
+    position:relative;color:#c9ccd1;padding:50px 40px 20px;
+    background:var(--navy-dark);
+  }
+  .footer-top{
+    display:grid;grid-template-columns:1fr 1fr;
+    grid-template-rows:auto auto auto;
+    gap:0 40px;max-width:1150px;margin:0 auto 30px;
+    position:relative;z-index:1;
+  }
+  .footer-logo-col{grid-column:1;grid-row:1;}
+  .footer-heading-col{grid-column:2;grid-row:1;}
+  .footer-desc-col{grid-column:1;grid-row:2;padding-top:16px;}
+  .footer-address-col{grid-column:2;grid-row:2;padding-top:16px;}
+  .footer-whistle-col{grid-column:2;grid-row:3;padding-top:16px;}
+  .footer-logo .wordmark{font-weight:800;font-size:23px;letter-spacing:.5px;color:#fff;}
+  .footer-line{height:2px;margin-top:16px;background:linear-gradient(90deg,var(--red) 0%,var(--red) 82%,transparent 100%);}
+  .footer-top h5{color:#fff;font-size:18px;margin:0;font-weight:700;}
+  .footer-top p{font-size:13px;line-height:1.7;margin:0 0 8px;color:#c9ccd1;}
+  .footer-item{display:flex;gap:12px;align-items:flex-start;margin-bottom:16px;}
+  .footer-item .ficon{flex-shrink:0;width:20px;height:20px;color:var(--red);margin-top:2px;}
+  .footer-item .flabel{font-weight:700;color:#fff;font-size:13.5px;}
+  .footer-item .fvalue{font-size:13px;color:#aeb3bd;}
+  .footer-social{
+    display:flex;gap:10px;justify-content:center;margin:34px 0 14px;position:relative;z-index:1;
+  }
+  .footer-social span{
+    width:28px;height:28px;border-radius:50%;background:#2a3549;
+    display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;
+  }
+  .footer-copy{position:relative;z-index:1;text-align:center;font-size:11px;color:#9aa0ab;border-top:1px solid rgba(255,255,255,.15);padding-top:14px;}
+
+  @media (max-width:900px){
+    header{justify-content:flex-start;padding:24px 20px;}
+    .hamburger{display:flex;}
+    nav{
+      display:none;flex-direction:column;gap:0;width:100%;position:absolute;
+      top:100%;left:0;background:#fff;box-shadow:0 14px 28px rgba(0,0,0,.14);
+      padding:8px 0;z-index:90;
+    }
+    header.nav-open nav{display:flex;}
+    .nav-item{width:100%;}
+    .nav-item .l1{padding:14px 26px;justify-content:space-between;}
+    .nav-item .l2{padding:0 26px 14px;}
+    .dropdown{
+      position:static;display:none;width:100%;box-shadow:none;background:#f7f7f7;
+      margin-top:0;padding:6px 0;
+    }
+    .nav-item.open .dropdown{display:flex;}
+    .dropdown a{padding:10px 40px;}
+    .form-grid{grid-template-columns:1fr;}
+    .form-group.full-width{grid-column:span 1;}
+    .card-body{padding:20px;}
+    .portal-wrap{padding:0 20px 50px;}
+    .footer-top{grid-template-columns:1fr;}
+    .footer-logo-col,.footer-heading-col,.footer-desc-col,.footer-address-col,.footer-whistle-col{grid-column:1;grid-row:auto;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-nav">
+    <a href="index.html" style="text-decoration:none;"><div class="logo">
+    <div class="wordmark">TRANSNET</div>
+    <div class="mark"><img src="data:image/png;base64,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" alt="Transnet"></div>
+    </div></a>
+    <nav>
+      <div class="nav-item">
+        <a href="#" class="nav-label" onclick="handleNavLabelClick(event,this)"><span class="l1">About <i class="car">▾</i></span><span class="l2">Us</span></a>
+        <div class="dropdown">
+          <a href="#">Overview</a>
+          <a href="#">Our History</a>
+          <a href="#">Strategic Intent</a>
+          <a href="#">Board Of Directors</a>
+          <a href="#">Our Shareholders</a>
+          <a href="#">Timeline</a>
+          <a href="#">Safety</a>
+          <a href="#">Transnet Foundation</a>
+          <a href="#">Transnet Heritage</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <a href="#" class="nav-label" onclick="handleNavLabelClick(event,this)"><span class="l1">Our <i class="car">▾</i></span><span class="l2">Divisions</span></a>
+        <div class="dropdown">
+          <a href="#">Transnet Engineering</a>
+          <a href="#">Transnet Rail Infrastructure Manager</a>
+          <a href="#">Transnet Freight Rail</a>
+          <a href="#">Transnet Port Terminals</a>
+          <a href="#">Transnet National Port Authority</a>
+          <a href="#">Transnet Pipelines</a>
+          <a href="#">Transnet Property</a>
+          <a href="supply-chain.html">Supply Chain</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <a href="#" class="nav-label" onclick="handleNavLabelClick(event,this)"><span class="l1">Investor <i class="car">▾</i></span><span class="l2">Relations</span></a>
+        <div class="dropdown">
+          <a href="#">Annual Results</a>
+          <a href="#">Governance</a>
+          <a href="#">DMTN &amp; GMTN</a>
+          <a href="#">SENS Announcements</a>
+          <a href="#">Pricing Supplements</a>
+          <a href="#">Lender Notices</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <a href="#" class="nav-label" onclick="handleNavLabelClick(event,this)"><span class="l1">Business <i class="car">▾</i></span><span class="l2">With Us</span></a>
+        <div class="dropdown">
+          <a href="#">Private Sector Participation</a>
+          <a href="tenders.html">Transnet Tenders</a>
+          <a href="#">B-BBEE GUIDE</a>
+          <a href="#">Localisation &amp; ESD</a>
+          <a href="#">Legal Notices</a>
+          <a href="submit-document.html">e-Submission Portal</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <a href="#" class="nav-label" onclick="handleNavLabelClick(event,this)"><span class="l1">Transnet <i class="car">▾</i></span><span class="l2">Academy</span></a>
+        <div class="dropdown">
+          <a href="#">Overview</a>
+          <a href="#">Our Services</a>
+          <a href="#">Our Structures</a>
+          <a href="#">Our Brochure</a>
+          <a href="#">Image Gallery</a>
+          <a href="#">Contact The Academy</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <a href="#" class="nav-label" onclick="handleNavLabelClick(event,this)"><span class="l1">Media <i class="car">▾</i></span></a>
+        <div class="dropdown">
+          <a href="#">Media Centre</a>
+          <a href="#">Class Notice</a>
+          <a href="#">Second Class Notice</a>
+          <a href="#">Cable Theft Statistics</a>
+          <a href="#">Customer Newsletter</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <a href="#" class="nav-label" onclick="handleNavLabelClick(event,this)"><span class="l1">Careers <i class="car">▾</i></span></a>
+        <div class="dropdown">
+          <a href="#">A Career With Transnet</a>
+          <a href="#">Youth Development Programmes</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <a href="#" class="nav-label" onclick="handleNavLabelClick(event,this)"><span class="l1">PAIA / <i class="car">▾</i></span><span class="l2">POPIA</span></a>
+        <div class="dropdown">
+          <a href="#">PAIA</a>
+          <a href="#">POPIA</a>
+        </div>
+      </div>
+    </nav>
+  </div>
+  <span class="search-icon">🔍</span>
+  <button class="hamburger" aria-label="Toggle menu" onclick="toggleMobileNav()">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<div class="page-banner">
+  <div class="breadcrumb"><a href="index.html">Home</a> / <a href="tenders.html">Business With Us</a> / Vendor Document Submission</div>
+  <h1>Vendor Document Submission Portal</h1>
+  <p>Upload official tender proposals, RFQ response documents, and vendor compliance paperwork directly to Transnet Cloud Storage.</p>
+</div>
+
+<div class="portal-wrap">
+
+  <!-- STORAGE CONNECTION STATUS BAR -->
+  <div class="cloud-config-bar">
+    <div class="config-info">
+      <span class="config-badge">Secure Storage Connected</span>
+      <p class="config-text" id="config-status-text">
+        Documents are transmitted directly to Transnet's encrypted document repository.
+      </p>
+    </div>
+  </div>
+
+  <!-- UPLOAD FORM CARD -->
+  <div class="portal-card">
+    <div class="card-header">
+      <h2>1. Submission Information &amp; Documents</h2>
+      <span class="step-pill">Secure SSL Encrypted</span>
+    </div>
+
+    <div class="card-body">
+      <form id="uploadForm" onsubmit="handleFormSubmit(event)">
+
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label for="tenderRef">Select Target Tender / RFQ Opportunity <span>*</span></label>
+            <select id="tenderRef" class="form-control" required>
+              <option value="">-- Choose Active Opportunity --</option>
+              <option value="TNPA/2026/07/1248/8099/RFQ">TNPA/2026/07/1248/8099/RFQ - Supply and Delivery of 500 Smart Phones</option>
+              <option value="TE/RT57/2026/11/RFQ">TE/RT57/2026/11/RFQ - Supply &amp; Delivery of CASE Backhoe Loader &amp; Excavators</option>
+              <option value="TE/RT57/2026/17/RFQ">TE/RT57/2026/17/RFQ - Supply &amp; Delivery of BELL Equipment</option>
+              <option value="TE/RT57/2026/06/RFQ">TE/RT57/2026/06/RFQ - Supply &amp; Delivery of XCMG Motor Grader</option>
+              <option value="TE/RT57/2026/08/RFQ">TE/RT57/2026/08/RFQ - Supply &amp; Delivery of LIEBHERR Excavators</option>
+              <option value="TE/RT57/2026/09/RFQ">TE/RT57/2026/09/RFQ - Supply &amp; Delivery of LIUGONG Backhoe Loader &amp; Motor Grader</option>
+              <option value="TE/RT57/2026/10/RFQ">TE/RT57/2026/10/RFQ - Supply &amp; Delivery of NEW HOLLAND Backhoe Loader &amp; Excavator</option>
+              <option value="TE/RT57/2026/12/RFQ">TE/RT57/2026/12/RFQ - Supply &amp; Delivery of SANY Dump Truck &amp; Excavator</option>
+              <option value="TE/RT57/2026/13/RFQ">TE/RT57/2026/13/RFQ - Supply &amp; Delivery of GEAR Backhoe Loader</option>
+              <option value="TE/RT57/2026/15/RFQ">TE/RT57/2026/15/RFQ - Supply &amp; Delivery of VOLVO Dump Truck &amp; Backhoe Loader</option>
+              <option value="TE/RT57/2026/16/RFQ">TE/RT57/2026/16/RFQ - Supply &amp; Delivery of DEZZI Dump Truck &amp; Backhoe Loader</option>
+              <option value="GENERAL_VENDOR_REGISTRATION">GENERAL - Vendor Registration &amp; Compliance Documents</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="companyName">Company Registered Name <span>*</span></label>
+            <input type="text" id="companyName" class="form-control" placeholder="e.g. Apex Logistics (Pty) Ltd" required>
+          </div>
+
+          <div class="form-group">
+            <label for="companyReg">CIPC / Tax Registration No. <span>*</span></label>
+            <input type="text" id="companyReg" class="form-control" placeholder="e.g. 2021/489102/07" required>
+          </div>
+
+          <div class="form-group">
+            <label for="contactPerson">Authorized Contact Representative <span>*</span></label>
+            <input type="text" id="contactPerson" class="form-control" placeholder="e.g. John Khumalo" required>
+          </div>
+
+          <div class="form-group">
+            <label for="contactEmail">Official Contact Email <span>*</span></label>
+            <input type="email" id="contactEmail" class="form-control" placeholder="procurement@company.co.za" required>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="docCategory">Document Category <span>*</span></label>
+            <select id="docCategory" class="form-control" required>
+              <option value="Technical Proposal">Technical Proposal &amp; Specification</option>
+              <option value="Financial Proposal">Financial Proposal &amp; Pricing Schedule</option>
+              <option value="B-BBEE Compliance">B-BBEE Certificate &amp; Tax Clearance</option>
+              <option value="Company Registration">Company CIPC Registration (CK)</option>
+              <option value="Complete RFQ Bid Package">Complete Tender Response Package (ZIP)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- DRAG AND DROP ZONE -->
+        <div class="form-group full-width">
+          <label>Select &amp; Upload Document File(s) <span>*</span></label>
+          <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+            <div class="drop-icon">📁</div>
+            <div class="drop-title">Drag and drop your file(s) here, or click to browse</div>
+            <div class="drop-sub">Supported formats: PDF, DOCX, ZIP, PNG, JPG (Maximum size: 50 MB per file) &bull; Multiple files allowed</div>
+            <span class="btn-select">Select File(s) from Computer</span>
+            <input type="file" id="fileInput" multiple style="display:none" onchange="handleFileSelect(event)">
+          </div>
+        </div>
+
+        <!-- SELECTED FILE DISPLAY -->
+        <div class="file-preview-list" id="filePreviewList"></div>
+
+        <!-- UPLOAD PROGRESS -->
+        <div class="progress-wrap" id="progressWrap">
+          <div class="progress-header">
+            <span id="progressStatus">Uploading file to Transnet Document Repository...</span>
+            <span id="progressPercent">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progressBarFill"></div>
+          </div>
+        </div>
+
+        <!-- SUBMIT BUTTON -->
+        <div class="form-actions">
+          <button type="submit" class="btn-submit-cloud" id="btnSubmit" disabled>☁️ Submit &amp; Upload to Cloud</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS CONFIRMATION RECEIPT MODAL -->
+<div class="modal-overlay" id="successModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Submission Received</h3>
+      <button class="btn-remove" onclick="closeSuccessModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="success-icon">✓</div>
+      <h3 style="margin:0 0 6px;color:var(--navy);font-size:22px;">Document Uploaded Successfully!</h3>
+      <p style="font-size:14px;color:#64748b;margin:0;">Your tender response document has been encrypted and stored in Transnet's secure document repository.</p>
+
+      <div class="ref-box" id="modalRefId">TRN-2026-00000</div>
+
+      <div style="text-align:left;background:#f8fafc;padding:16px;border-radius:8px;font-size:13px;line-height:1.7;color:#334155;margin-bottom:16px;">
+        <div><strong>Tender Reference:</strong> <span id="modalTenderRef"></span></div>
+        <div><strong>Company Name:</strong> <span id="modalCompany"></span></div>
+        <div><strong>Authorized Contact:</strong> <span id="modalContactPerson"></span></div>
+        <div><strong>Contact Email:</strong> <span id="modalContactEmail"></span></div>
+        <div><strong>Status:</strong> Received &amp; queued for procurement review</div>
+        <div><strong>Timestamp:</strong> <span id="modalTimestamp"></span></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-config-settings" onclick="window.print()">🖨️ Print Receipt</button>
+      <button class="btn-submit-cloud" onclick="closeSuccessModal()" style="padding:10px 24px;font-size:13px;">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-logo-col">
+      <div class="footer-logo">
+        <div class="wordmark">TRANSNET</div>
+      </div>
+      <div class="footer-line"></div>
+    </div>
+    <div class="footer-heading-col">
+      <h5>Contact us</h5>
+      <div class="footer-line"></div>
+    </div>
+    <div class="footer-desc-col">
+      <p>As the custodian of ports, rail, and pipelines, Transnet's objective is to ensure a globally competitive freight system that enables sustained growth and diversification of the country's economy.</p>
+    </div>
+    <div class="footer-address-col">
+      <div class="footer-item">
+        <span class="ficon">📍</span>
+        <div><div class="flabel">Address Information</div><div class="fvalue">100 Eel Road, Bayhead Road, Durban, 4001</div></div>
+      </div>
+      <div class="footer-item">
+        <span class="ficon">📞</span>
+        <div><div class="flabel">Call Now</div><div class="fvalue">031 516 0508</div></div>
+      </div>
+      <div class="footer-item">
+        <span class="ficon">✉</span>
+        <div><div class="flabel">Mail</div><div class="fvalue">supplychain@transnet-freight.net</div></div>
+      </div>
+    </div>
+    <div class="footer-whistle-col">
+      <div class="footer-item">
+        <span class="ficon">📞</span>
+        <div><div class="flabel">Whistle Blowing Hotline:</div><div class="fvalue">0315160508</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="footer-social">
+    <span>f</span><span>𝕏</span><span>in</span><span>▶</span><span>◎</span><span>@</span>
+  </div>
+  <div class="footer-copy">Copyright &copy; 2026 Transnet Logistics. All rights reserved.</div>
+</footer>
+
+<script>
+  function toggleMobileNav(){
+    document.querySelector('header').classList.toggle('nav-open');
+    document.querySelector('.hamburger').classList.toggle('active');
+  }
+  function handleNavLabelClick(e, el){
+    if (window.innerWidth <= 900) {
+      e.preventDefault();
+      const item = el.closest('.nav-item');
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.nav-item.open').forEach(i => { if (i !== item) i.classList.remove('open'); });
+      item.classList.toggle('open', !wasOpen);
+    }
+  }
+
+  let selectedFiles = [];
+
+  const SUPABASE_URL = 'https://anseecipbvxzcprmwknx.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_Rz3c8tZvXKaUkysapjh8Yw_JaM-ZxXm';
+  const SUBMISSIONS_BUCKET = 'tender-submissions';
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+  const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'png', 'jpg', 'jpeg'];
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const rfqParam = urlParams.get('rfq');
+    if (rfqParam) {
+      const select = document.getElementById('tenderRef');
+      for (let option of select.options) {
+        if (!option.value) continue;
+        if (option.value.includes(rfqParam) || rfqParam.includes(option.value)) {
+          select.value = option.value;
+          break;
+        }
+      }
+    }
+  });
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    document.getElementById('dropzone').classList.add('dragover');
+  }
+  function handleDragLeave(e) {
+    e.preventDefault();
+    document.getElementById('dropzone').classList.remove('dragover');
+  }
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('dropzone').classList.remove('dragover');
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      addFiles(e.dataTransfer.files);
+    }
+  }
+  function handleFileSelect(e) {
+    if (e.target.files && e.target.files.length > 0) {
+      addFiles(e.target.files);
+    }
+  }
+
+  function addFiles(fileList) {
+    for (const file of fileList) {
+      if (file.size > 50 * 1024 * 1024) {
+        alert(`"${file.name}" exceeds the 50 MB per-file limit and was skipped.`);
+        continue;
+      }
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (!ALLOWED_EXTENSIONS.includes(ext)) {
+        alert(`"${file.name}" is an unsupported file type and was skipped.`);
+        continue;
+      }
+      selectedFiles.push(file);
+    }
+    document.getElementById('fileInput').value = '';
+    renderFilePreview();
+  }
+
+  function renderFilePreview() {
+    const list = document.getElementById('filePreviewList');
+    list.innerHTML = selectedFiles.map((file, i) => {
+      const ext = file.name.split('.').pop().toUpperCase();
+      const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+      return `
+        <div class="file-item">
+          <div class="file-info">
+            <div class="file-icon">${ext}</div>
+            <div>
+              <div class="file-name">${file.name}</div>
+              <div class="file-size">${sizeMb} MB &bull; Ready for upload</div>
+            </div>
+          </div>
+          <button type="button" class="btn-remove" onclick="removeFile(${i})" title="Remove file">&times;</button>
+        </div>
+      `;
+    }).join('');
+    document.getElementById('btnSubmit').disabled = selectedFiles.length === 0;
+  }
+
+  function removeFile(index) {
+    selectedFiles.splice(index, 1);
+    renderFilePreview();
+  }
+
+  function genReference() {
+    const year = new Date().getFullYear();
+    const rand = Math.floor(10000 + Math.random() * 90000);
+    const suffix = crypto.randomUUID().slice(0, 4);
+    return `TRN-${year}-${rand}${suffix}`;
+  }
+
+  function uploadOneFile(file, filePath, onProgress) {
+    return new Promise((resolve, reject) => {
+      const uploadUrl = `${SUPABASE_URL}/storage/v1/object/${SUBMISSIONS_BUCKET}/${filePath.split('/').map(encodeURIComponent).join('/')}`;
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', uploadUrl, true);
+      xhr.setRequestHeader('apikey', SUPABASE_PUBLISHABLE_KEY);
+      xhr.setRequestHeader('Authorization', `Bearer ${SUPABASE_PUBLISHABLE_KEY}`);
+      xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) onProgress(event.loaded / event.total);
+      };
+      xhr.onload = () => {
+        if (xhr.status === 200 || xhr.status === 201) resolve();
+        else reject(new Error(`${xhr.statusText} (${xhr.status})`));
+      };
+      xhr.onerror = () => reject(new Error('Network error during upload.'));
+      xhr.send(file);
+    });
+  }
+
+  async function handleFormSubmit(e) {
+    e.preventDefault();
+    if (selectedFiles.length === 0) {
+      alert('Please select at least one document file to upload.');
+      return;
+    }
+
+    const tenderRef = document.getElementById('tenderRef').value;
+    const docCategory = document.getElementById('docCategory').value;
+    const companyName = document.getElementById('companyName').value.trim();
+    const companyReg = document.getElementById('companyReg').value.trim();
+    const contactPerson = document.getElementById('contactPerson').value.trim();
+    const contactEmail = document.getElementById('contactEmail').value.trim();
+
+    const btnSubmit = document.getElementById('btnSubmit');
+    const progressWrap = document.getElementById('progressWrap');
+    const progressFill = document.getElementById('progressBarFill');
+    const progressPercent = document.getElementById('progressPercent');
+    const progressStatus = document.getElementById('progressStatus');
+
+    btnSubmit.disabled = true;
+    progressWrap.style.display = 'block';
+    progressFill.style.width = '0%';
+    progressPercent.textContent = '0%';
+    progressStatus.textContent = 'Connecting to Transnet Document Repository...';
+
+    const reference = genReference();
+    const safeTenderRef = (tenderRef || 'general').replace(/[^a-zA-Z0-9._-]/g, '_');
+    const totalFiles = selectedFiles.length;
+    const filesMeta = selectedFiles.map((file) => {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      return {
+        file,
+        filePath: `${safeTenderRef}/${reference}/${safeName}`,
+        ext: file.name.split('.').pop().toLowerCase()
+      };
+    });
+
+    try {
+      for (let i = 0; i < filesMeta.length; i++) {
+        const { file, filePath } = filesMeta[i];
+        progressStatus.textContent = `Uploading file ${i + 1} of ${totalFiles}: ${file.name}`;
+        await uploadOneFile(file, filePath, (fraction) => {
+          const overall = Math.round(((i + fraction) / totalFiles) * 100);
+          progressFill.style.width = overall + '%';
+          progressPercent.textContent = overall + '%';
+        });
+      }
+    } catch (err) {
+      alert(`Upload Error: ${err.message}. Please try again or contact Transnet supply chain support.`);
+      btnSubmit.disabled = false;
+      return;
+    }
+
+    progressStatus.textContent = 'Recording submission...';
+    progressFill.style.width = '100%';
+    progressPercent.textContent = '100%';
+
+    const submissionId = crypto.randomUUID();
+    const { error: submissionError } = await supabaseClient.from('submissions').insert({
+      id: submissionId,
+      reference,
+      tender_ref: tenderRef,
+      doc_category: docCategory,
+      company_name: companyName,
+      company_reg: companyReg,
+      contact_person: contactPerson,
+      contact_email: contactEmail,
+      status: 'pending'
+    });
+
+    if (submissionError) {
+      alert(`Submission record could not be saved: ${submissionError.message}`);
+      btnSubmit.disabled = false;
+      return;
+    }
+
+    const fileRows = filesMeta.map(({ file, filePath, ext }) => ({
+      submission_id: submissionId,
+      file_path: filePath,
+      file_name: file.name,
+      file_bytes: file.size,
+      file_format: ext
+    }));
+
+    const { error: filesError } = await supabaseClient.from('submission_files').insert(fileRows);
+    if (filesError) {
+      alert(`Files uploaded but could not be recorded: ${filesError.message}. Please contact Transnet supply chain support with reference ${reference}.`);
+      btnSubmit.disabled = false;
+      return;
+    }
+
+    showSuccessModal(reference, tenderRef, companyName, contactPerson, contactEmail);
+    btnSubmit.disabled = false;
+  }
+
+  function showSuccessModal(refId, tenderRef, companyName, contactPerson, contactEmail) {
+    document.getElementById('modalRefId').textContent = refId;
+    document.getElementById('modalTenderRef').textContent = tenderRef;
+    document.getElementById('modalCompany').textContent = companyName;
+    document.getElementById('modalContactPerson').textContent = contactPerson;
+    document.getElementById('modalContactEmail').textContent = contactEmail;
+    document.getElementById('modalTimestamp').textContent = new Date().toLocaleString();
+
+    document.getElementById('successModal').style.display = 'flex';
+  }
+
+  function closeSuccessModal() {
+    document.getElementById('successModal').style.display = 'none';
+    selectedFiles = [];
+    renderFilePreview();
+    document.getElementById('uploadForm').reset();
+    document.getElementById('progressWrap').style.display = 'none';
+  }
+</script>
+
+</body>
+</html>

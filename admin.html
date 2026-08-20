@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff Portal &ndash; Transnet Vendor Submissions</title>
+<meta name="robots" content="noindex, nofollow">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --red:#c41e3a;
+    --red-dark:#8e1729;
+    --navy:#1f2a3c;
+    --navy-dark:#161e2b;
+    --ink:#2b2b2b;
+    --grey-bg:#eef0f1;
+    --grey-line:#e2e2e2;
+    --font: "Open Sans", Arial, Helvetica, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:var(--font);color:var(--ink);background:var(--grey-bg);}
+
+  header{background:var(--navy);color:#fff;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;}
+  header .brand{font-weight:800;letter-spacing:.5px;font-size:18px;}
+  header .brand span{color:var(--red);}
+  header .sub{font-size:12.5px;color:#9aa5b5;margin-top:2px;}
+  header button{background:transparent;border:1px solid #45536b;color:#cbd3df;padding:8px 14px;border-radius:6px;font-size:13px;cursor:pointer;}
+  header button:hover{background:#2a3446;border-color:#5a6a86;}
+
+  /* LOGIN */
+  .login-wrap{min-height:calc(100vh - 64px);display:flex;align-items:center;justify-content:center;padding:24px;}
+  .login-card{background:#fff;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:36px;width:100%;max-width:380px;}
+  .login-card h1{font-size:19px;margin:0 0 6px;color:var(--navy);}
+  .login-card p{font-size:13px;color:#64748b;margin:0 0 22px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:12.5px;font-weight:700;margin-bottom:6px;color:#334155;}
+  .field input{width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:14px;font-family:var(--font);}
+  .field input:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(196,30,58,.12);}
+  .btn-primary{width:100%;background:var(--red);color:#fff;border:none;padding:11px;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;}
+  .btn-primary:hover{background:var(--red-dark);}
+  .btn-primary:disabled{opacity:.6;cursor:default;}
+  .login-error{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-size:12.5px;padding:10px 12px;border-radius:6px;margin-bottom:16px;display:none;}
+
+  /* DASHBOARD */
+  .dash-wrap{display:none;padding:28px;max-width:1400px;margin:0 auto;}
+  .dash-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+  .dash-head h2{margin:0;font-size:20px;color:var(--navy);}
+  .dash-head .count{font-size:13px;color:#64748b;}
+  .toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+  .toolbar select, .toolbar input{padding:8px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;font-family:var(--font);}
+  .toolbar button{padding:8px 14px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;background:#fff;cursor:pointer;}
+  .toolbar button:hover{background:#f1f5f9;}
+
+  .table-card{background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow-x:auto;}
+  table{width:100%;min-width:900px;border-collapse:collapse;font-size:13px;}
+  thead th{text-align:left;background:var(--navy);color:#fff;padding:11px 14px;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;}
+  tbody td{padding:12px 14px;border-bottom:1px solid var(--grey-line);vertical-align:top;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#f8fafc;}
+  .ref{font-weight:700;color:var(--navy);}
+  .company{font-weight:600;}
+  .meta{color:#64748b;font-size:12px;}
+  .status-pill{display:inline-block;padding:3px 10px;border-radius:100px;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
+  .status-pending{background:#fef3c7;color:#92400e;}
+  .status-reviewed{background:#dbeafe;color:#1e40af;}
+  .status-accepted{background:#dcfce7;color:#166534;}
+  .status-rejected{background:#fee2e2;color:#991b1b;}
+  .row-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .row-actions select{padding:6px 8px;border:1px solid #cbd5e1;border-radius:5px;font-size:12.5px;}
+  .btn-download{background:var(--navy);color:#fff;border:none;padding:6px 12px;border-radius:5px;font-size:12.5px;cursor:pointer;white-space:nowrap;}
+  .btn-download:hover{background:var(--navy-dark);}
+  .btn-download:disabled{opacity:.5;cursor:default;}
+  .btn-delete{background:#fff;color:var(--red);border:1px solid var(--red);padding:6px 12px;border-radius:5px;font-size:12.5px;cursor:pointer;white-space:nowrap;}
+  .btn-delete:hover{background:#fef2f2;}
+  .btn-delete:disabled{opacity:.5;cursor:default;}
+  .file-list{display:flex;flex-direction:column;gap:6px;}
+  .file-list-item{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .file-list-name{font-size:12px;color:#334155;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .empty-state{padding:60px 20px;text-align:center;color:#94a3b8;font-size:14px;}
+  .loading-state{padding:40px 20px;text-align:center;color:#94a3b8;font-size:13px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="brand">TRANS<span>NET</span> &mdash; Staff Portal</div>
+    <div class="sub">Vendor Document Submissions</div>
+  </div>
+  <button id="btnLogout" style="display:none;" onclick="handleLogout()">Sign Out</button>
+</header>
+
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <h1>Staff Sign In</h1>
+    <p>Access is restricted to authorized Transnet procurement staff.</p>
+    <div class="login-error" id="loginError"></div>
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="field">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" required autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn-primary" id="btnLogin">Sign In</button>
+    </form>
+  </div>
+</div>
+
+<div class="dash-wrap" id="dashWrap">
+  <div class="dash-head">
+    <h2>Submissions</h2>
+    <span class="count" id="submissionCount"></span>
+  </div>
+  <div class="toolbar">
+    <select id="filterStatus" onchange="loadSubmissions()">
+      <option value="">All statuses</option>
+      <option value="pending">Pending</option>
+      <option value="reviewed">Reviewed</option>
+      <option value="accepted">Accepted</option>
+      <option value="rejected">Rejected</option>
+    </select>
+    <button onclick="loadSubmissions()">Refresh</button>
+  </div>
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Tender / RFQ</th>
+          <th>Company</th>
+          <th>Category</th>
+          <th>Contact</th>
+          <th>Files</th>
+          <th>Status</th>
+          <th>Submitted</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="submissionsBody">
+        <tr><td colspan="9" class="loading-state">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://anseecipbvxzcprmwknx.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_Rz3c8tZvXKaUkysapjh8Yw_JaM-ZxXm';
+  const SUBMISSIONS_BUCKET = 'tender-submissions';
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+  const loginWrap = document.getElementById('loginWrap');
+  const dashWrap = document.getElementById('dashWrap');
+  const btnLogout = document.getElementById('btnLogout');
+
+  window.addEventListener('DOMContentLoaded', async () => {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) {
+      showDashboard();
+    } else {
+      showLogin();
+    }
+  });
+
+  function showLogin() {
+    loginWrap.style.display = 'flex';
+    dashWrap.style.display = 'none';
+    btnLogout.style.display = 'none';
+  }
+
+  function showDashboard() {
+    loginWrap.style.display = 'none';
+    dashWrap.style.display = 'block';
+    btnLogout.style.display = 'inline-block';
+    loadSubmissions();
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const btnLogin = document.getElementById('btnLogin');
+    const loginError = document.getElementById('loginError');
+
+    btnLogin.disabled = true;
+    btnLogin.textContent = 'Signing in...';
+    loginError.style.display = 'none';
+
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+    btnLogin.disabled = false;
+    btnLogin.textContent = 'Sign In';
+
+    if (error) {
+      loginError.textContent = 'Sign in failed: ' + error.message;
+      loginError.style.display = 'block';
+      return;
+    }
+    showDashboard();
+  }
+
+  async function handleLogout() {
+    await supabaseClient.auth.signOut();
+    showLogin();
+  }
+
+  async function loadSubmissions() {
+    const tbody = document.getElementById('submissionsBody');
+    tbody.innerHTML = '<tr><td colspan="9" class="loading-state">Loading...</td></tr>';
+
+    const statusFilter = document.getElementById('filterStatus').value;
+    let query = supabaseClient
+      .from('submissions')
+      .select('*, submission_files(id, file_path, file_name, file_bytes, file_format)')
+      .order('created_at', { ascending: false });
+    if (statusFilter) query = query.eq('status', statusFilter);
+
+    const { data, error } = await query;
+
+    if (error) {
+      tbody.innerHTML = `<tr><td colspan="9" class="empty-state">Failed to load submissions: ${escapeHtml(error.message)}</td></tr>`;
+      return;
+    }
+
+    document.getElementById('submissionCount').textContent = `${data.length} submission${data.length === 1 ? '' : 's'}`;
+
+    if (data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" class="empty-state">No submissions found.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.map(rowHtml).join('');
+  }
+
+  function rowHtml(row) {
+    const submitted = new Date(row.created_at).toLocaleString();
+    const statusClass = 'status-' + (row.status || 'pending');
+    const files = row.submission_files || [];
+
+    const filesHtml = files.length === 0
+      ? '<span class="meta">No files</span>'
+      : `<div class="file-list">
+          ${files.map(f => `
+            <div class="file-list-item">
+              <span class="file-list-name" title="${escapeHtml(f.file_name)}">${escapeHtml(f.file_name)}</span>
+              <button class="btn-download" onclick="downloadFile('${f.file_path}', '${escapeJs(f.file_name)}', this)">Download</button>
+            </div>
+          `).join('')}
+          ${files.length > 1 ? `<button class="btn-download" onclick="downloadAllZip('${row.id}', '${escapeJs(row.reference)}', this)">Download All (ZIP)</button>` : ''}
+        </div>`;
+
+    return `
+      <tr data-id="${row.id}">
+        <td class="ref">${escapeHtml(row.reference)}</td>
+        <td>${escapeHtml(row.tender_ref || '')}</td>
+        <td>
+          <div class="company">${escapeHtml(row.company_name || '')}</div>
+          <div class="meta">${escapeHtml(row.company_reg || '')}</div>
+        </td>
+        <td>${escapeHtml(row.doc_category || '')}</td>
+        <td>
+          <div>${escapeHtml(row.contact_person || '')}</div>
+          <div class="meta">${escapeHtml(row.contact_email || '')}</div>
+        </td>
+        <td>${filesHtml}</td>
+        <td>
+          <div class="row-actions">
+            <span class="status-pill ${statusClass}">${escapeHtml(row.status || 'pending')}</span>
+            <select onchange="updateStatus('${row.id}', this.value)">
+              <option value="">Change to...</option>
+              <option value="pending">Pending</option>
+              <option value="reviewed">Reviewed</option>
+              <option value="accepted">Accepted</option>
+              <option value="rejected">Rejected (deletes)</option>
+            </select>
+          </div>
+        </td>
+        <td class="meta">${submitted}</td>
+        <td>
+          <button class="btn-delete" onclick="deleteSubmission('${row.id}', '${escapeJs(row.reference)}', this)">Delete</button>
+        </td>
+      </tr>
+    `;
+  }
+
+  async function downloadFile(filePath, fileName, btn) {
+    if (!filePath) return;
+    // Open the tab synchronously on the click so browsers don't treat it as a
+    // popup once the signed-URL request resolves asynchronously.
+    const newTab = window.open('', '_blank');
+
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = 'Preparing...';
+
+    const { data, error } = await supabaseClient.storage
+      .from(SUBMISSIONS_BUCKET)
+      .createSignedUrl(filePath, 300);
+
+    btn.disabled = false;
+    btn.textContent = originalText;
+
+    if (error) {
+      if (newTab) newTab.close();
+      alert('Could not generate download link: ' + error.message);
+      return;
+    }
+    if (newTab) {
+      newTab.location.href = data.signedUrl;
+    } else {
+      // Popup blocked even for the synchronous open; fall back to same-tab.
+      window.location.href = data.signedUrl;
+    }
+  }
+
+  async function downloadAllZip(submissionId, reference, btn) {
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = 'Zipping...';
+
+    try {
+      const { data: files, error: filesError } = await supabaseClient
+        .from('submission_files')
+        .select('file_path, file_name')
+        .eq('submission_id', submissionId);
+      if (filesError) throw filesError;
+
+      const zip = new JSZip();
+      for (const f of files) {
+        const { data: signed, error: signError } = await supabaseClient.storage
+          .from(SUBMISSIONS_BUCKET)
+          .createSignedUrl(f.file_path, 300);
+        if (signError) throw signError;
+        const resp = await fetch(signed.signedUrl);
+        if (!resp.ok) throw new Error(`Failed to fetch ${f.file_name}`);
+        zip.file(f.file_name, await resp.blob());
+      }
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${reference}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Could not build ZIP: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  }
+
+  async function deleteSubmission(id, reference, btn) {
+    if (!confirm(`Permanently delete submission ${reference}? This removes its record and all uploaded files. This cannot be undone.`)) {
+      return;
+    }
+    if (btn) btn.disabled = true;
+
+    const { data: files, error: filesError } = await supabaseClient
+      .from('submission_files')
+      .select('file_path')
+      .eq('submission_id', id);
+
+    if (filesError) {
+      alert('Failed to look up files for deletion: ' + filesError.message);
+      if (btn) btn.disabled = false;
+      return;
+    }
+
+    if (files.length > 0) {
+      const { error: removeError } = await supabaseClient.storage
+        .from(SUBMISSIONS_BUCKET)
+        .remove(files.map(f => f.file_path));
+      if (removeError) {
+        alert('Failed to delete stored files: ' + removeError.message);
+        if (btn) btn.disabled = false;
+        return;
+      }
+    }
+
+    const { error: deleteError } = await supabaseClient
+      .from('submissions')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) {
+      alert('Failed to delete submission record: ' + deleteError.message);
+      if (btn) btn.disabled = false;
+      return;
+    }
+
+    loadSubmissions();
+  }
+
+  async function updateStatus(id, newStatus) {
+    if (!newStatus) return;
+
+    if (newStatus === 'rejected') {
+      const row = document.querySelector(`tr[data-id="${id}"]`);
+      const reference = row ? row.querySelector('.ref').textContent : id;
+      await deleteSubmission(id, reference, null);
+      return;
+    }
+
+    const { error } = await supabaseClient
+      .from('submissions')
+      .update({ status: newStatus })
+      .eq('id', id);
+
+    if (error) {
+      alert('Failed to update status: ' + error.message);
+      return;
+    }
+    loadSubmissions();
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str == null ? '' : String(str);
+    return div.innerHTML;
+  }
+
+  function escapeJs(str) {
+    return String(str == null ? '' : str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  }
+</script>
+
+</body>
+</html>

@@ -6,7 +6,6 @@
 <title>Staff Portal &ndash; Transnet Vendor Submissions</title>
 <meta name="robots" content="noindex, nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
@@ -74,12 +73,6 @@
   .btn-download{background:var(--navy);color:#fff;border:none;padding:6px 12px;border-radius:5px;font-size:12.5px;cursor:pointer;white-space:nowrap;}
   .btn-download:hover{background:var(--navy-dark);}
   .btn-download:disabled{opacity:.5;cursor:default;}
-  .btn-delete{background:#fff;color:var(--red);border:1px solid var(--red);padding:6px 12px;border-radius:5px;font-size:12.5px;cursor:pointer;white-space:nowrap;}
-  .btn-delete:hover{background:#fef2f2;}
-  .btn-delete:disabled{opacity:.5;cursor:default;}
-  .file-list{display:flex;flex-direction:column;gap:6px;}
-  .file-list-item{display:flex;align-items:center;justify-content:space-between;gap:8px;}
-  .file-list-name{font-size:12px;color:#334155;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .empty-state{padding:60px 20px;text-align:center;color:#94a3b8;font-size:14px;}
   .loading-state{padding:40px 20px;text-align:center;color:#94a3b8;font-size:13px;}
 </style>
@@ -137,14 +130,13 @@
           <th>Company</th>
           <th>Category</th>
           <th>Contact</th>
-          <th>Files</th>
+          <th>File</th>
           <th>Status</th>
           <th>Submitted</th>
-          <th>Actions</th>
         </tr>
       </thead>
       <tbody id="submissionsBody">
-        <tr><td colspan="9" class="loading-state">Loading...</td></tr>
+        <tr><td colspan="8" class="loading-state">Loading...</td></tr>
       </tbody>
     </table>
   </div>
@@ -213,26 +205,23 @@
 
   async function loadSubmissions() {
     const tbody = document.getElementById('submissionsBody');
-    tbody.innerHTML = '<tr><td colspan="9" class="loading-state">Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="loading-state">Loading...</td></tr>';
 
     const statusFilter = document.getElementById('filterStatus').value;
-    let query = supabaseClient
-      .from('submissions')
-      .select('*, submission_files(id, file_path, file_name, file_bytes, file_format)')
-      .order('created_at', { ascending: false });
+    let query = supabaseClient.from('submissions').select('*').order('created_at', { ascending: false });
     if (statusFilter) query = query.eq('status', statusFilter);
 
     const { data, error } = await query;
 
     if (error) {
-      tbody.innerHTML = `<tr><td colspan="9" class="empty-state">Failed to load submissions: ${escapeHtml(error.message)}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" class="empty-state">Failed to load submissions: ${escapeHtml(error.message)}</td></tr>`;
       return;
     }
 
     document.getElementById('submissionCount').textContent = `${data.length} submission${data.length === 1 ? '' : 's'}`;
 
     if (data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="9" class="empty-state">No submissions found.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No submissions found.</td></tr>';
       return;
     }
 
@@ -242,20 +231,6 @@
   function rowHtml(row) {
     const submitted = new Date(row.created_at).toLocaleString();
     const statusClass = 'status-' + (row.status || 'pending');
-    const files = row.submission_files || [];
-
-    const filesHtml = files.length === 0
-      ? '<span class="meta">No files</span>'
-      : `<div class="file-list">
-          ${files.map(f => `
-            <div class="file-list-item">
-              <span class="file-list-name" title="${escapeHtml(f.file_name)}">${escapeHtml(f.file_name)}</span>
-              <button class="btn-download" onclick="downloadFile('${f.file_path}', '${escapeJs(f.file_name)}', this)">Download</button>
-            </div>
-          `).join('')}
-          ${files.length > 1 ? `<button class="btn-download" onclick="downloadAllZip('${row.id}', '${escapeJs(row.reference)}', this)">Download All (ZIP)</button>` : ''}
-        </div>`;
-
     return `
       <tr data-id="${row.id}">
         <td class="ref">${escapeHtml(row.reference)}</td>
@@ -269,7 +244,12 @@
           <div>${escapeHtml(row.contact_person || '')}</div>
           <div class="meta">${escapeHtml(row.contact_email || '')}</div>
         </td>
-        <td>${filesHtml}</td>
+        <td>
+          <button class="btn-download" onclick="downloadFile('${row.file_path}', this)" ${row.file_path ? '' : 'disabled'}>
+            ${row.file_path ? 'Download' : 'No file'}
+          </button>
+          <div class="meta">${row.file_bytes ? (row.file_bytes / 1024).toFixed(0) + ' KB' : ''}</div>
+        </td>
         <td>
           <div class="row-actions">
             <span class="status-pill ${statusClass}">${escapeHtml(row.status || 'pending')}</span>
@@ -278,19 +258,16 @@
               <option value="pending">Pending</option>
               <option value="reviewed">Reviewed</option>
               <option value="accepted">Accepted</option>
-              <option value="rejected">Rejected (deletes)</option>
+              <option value="rejected">Rejected</option>
             </select>
           </div>
         </td>
         <td class="meta">${submitted}</td>
-        <td>
-          <button class="btn-delete" onclick="deleteSubmission('${row.id}', '${escapeJs(row.reference)}', this)">Delete</button>
-        </td>
       </tr>
     `;
   }
 
-  async function downloadFile(filePath, fileName, btn) {
+  async function downloadFile(filePath, btn) {
     if (!filePath) return;
     // Open the tab synchronously on the click so browsers don't treat it as a
     // popup once the signed-URL request resolves asynchronously.
@@ -320,98 +297,8 @@
     }
   }
 
-  async function downloadAllZip(submissionId, reference, btn) {
-    btn.disabled = true;
-    const originalText = btn.textContent;
-    btn.textContent = 'Zipping...';
-
-    try {
-      const { data: files, error: filesError } = await supabaseClient
-        .from('submission_files')
-        .select('file_path, file_name')
-        .eq('submission_id', submissionId);
-      if (filesError) throw filesError;
-
-      const zip = new JSZip();
-      for (const f of files) {
-        const { data: signed, error: signError } = await supabaseClient.storage
-          .from(SUBMISSIONS_BUCKET)
-          .createSignedUrl(f.file_path, 300);
-        if (signError) throw signError;
-        const resp = await fetch(signed.signedUrl);
-        if (!resp.ok) throw new Error(`Failed to fetch ${f.file_name}`);
-        zip.file(f.file_name, await resp.blob());
-      }
-
-      const zipBlob = await zip.generateAsync({ type: 'blob' });
-      const url = URL.createObjectURL(zipBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${reference}.zip`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      alert('Could not build ZIP: ' + err.message);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = originalText;
-    }
-  }
-
-  async function deleteSubmission(id, reference, btn) {
-    if (!confirm(`Permanently delete submission ${reference}? This removes its record and all uploaded files. This cannot be undone.`)) {
-      return;
-    }
-    if (btn) btn.disabled = true;
-
-    const { data: files, error: filesError } = await supabaseClient
-      .from('submission_files')
-      .select('file_path')
-      .eq('submission_id', id);
-
-    if (filesError) {
-      alert('Failed to look up files for deletion: ' + filesError.message);
-      if (btn) btn.disabled = false;
-      return;
-    }
-
-    if (files.length > 0) {
-      const { error: removeError } = await supabaseClient.storage
-        .from(SUBMISSIONS_BUCKET)
-        .remove(files.map(f => f.file_path));
-      if (removeError) {
-        alert('Failed to delete stored files: ' + removeError.message);
-        if (btn) btn.disabled = false;
-        return;
-      }
-    }
-
-    const { error: deleteError } = await supabaseClient
-      .from('submissions')
-      .delete()
-      .eq('id', id);
-
-    if (deleteError) {
-      alert('Failed to delete submission record: ' + deleteError.message);
-      if (btn) btn.disabled = false;
-      return;
-    }
-
-    loadSubmissions();
-  }
-
   async function updateStatus(id, newStatus) {
     if (!newStatus) return;
-
-    if (newStatus === 'rejected') {
-      const row = document.querySelector(`tr[data-id="${id}"]`);
-      const reference = row ? row.querySelector('.ref').textContent : id;
-      await deleteSubmission(id, reference, null);
-      return;
-    }
-
     const { error } = await supabaseClient
       .from('submissions')
       .update({ status: newStatus })
@@ -428,10 +315,6 @@
     const div = document.createElement('div');
     div.textContent = str == null ? '' : String(str);
     return div.innerHTML;
-  }
-
-  function escapeJs(str) {
-    return String(str == null ? '' : str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
   }
 </script>
 

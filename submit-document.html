@@ -377,11 +377,16 @@
             <label for="tenderRef">Select Target Tender / RFQ Opportunity <span>*</span></label>
             <select id="tenderRef" class="form-control" required>
               <option value="">-- Choose Active Opportunity --</option>
-              <option value="TNPA/2026/07/1248/8099/RFQ">TNPA/2026/07/1248/8099/RFQ - Supply and Delivery of 500 Smart Phones</option>
-              <option value="TE/RT57/2026/11/RFQ">TE/RT57/2026/11/RFQ - Supply &amp; Delivery of CASE Backhoe Loader &amp; Excavators</option>
-              <option value="TE/RT57/2026/17/RFQ">TE/RT57/2026/17/RFQ - Supply &amp; Delivery of BELL Equipment</option>
-              <option value="TE/RT57/2026/06/RFQ">TE/RT57/2026/06/RFQ - Supply &amp; Delivery of XCMG Motor Grader</option>
-              <option value="TE/RT57/2026/08/RFQ">TE/RT57/2026/08/RFQ - Supply &amp; Delivery of LIEBHERR Excavators</option>
+              <option value="TNPA/2026/10/0002/115048/R - Truck Tyres (350 Units)" data-rfq="TNPA/2026/10/0002/115048/R">TNPA/2026/10/0002/115048/R - Truck Tyres (350 Units)</option>
+              <option value="TNPA/2026/10/0002/115048/R - Kwikot and Superline (150 + 1000)" data-rfq="TNPA/2026/10/0002/115048/R">TNPA/2026/10/0002/115048/R - Kwikot and Superline (150 + 1000)</option>
+              <option value="TNPA/2026/10/0002/115046/R - Shantui SG21-C6 Motor Graders (5)" data-rfq="TNPA/2026/10/0002/115046/R">TNPA/2026/10/0002/115046/R - Shantui SG21-C6 Motor Graders (5)</option>
+              <option value="TNPA/2026/10/0002/115046/R - Light Towers and Cummins Gensets" data-rfq="TNPA/2026/10/0002/115046/R">TNPA/2026/10/0002/115046/R - Light Towers and Cummins Gensets</option>
+              <option value="TNPA/2026/10/0002/115044/R - Revaro T-REX117 Motor Graders (5)" data-rfq="TNPA/2026/10/0002/115044/R">TNPA/2026/10/0002/115044/R - Revaro T-REX117 Motor Graders (5)</option>
+              <option value="TNPA/2026/10/0002/115047/R - CES 5 Ton Diesel Forklifts (5)" data-rfq="TNPA/2026/10/0002/115047/R">TNPA/2026/10/0002/115047/R - CES 5 Ton Diesel Forklifts (5)</option>
+              <option value="TNPA/2026/10/0002/115049/R - WEG Solar Panels and Hybrid Inverters" data-rfq="TNPA/2026/10/0002/115049/R">TNPA/2026/10/0002/115049/R - WEG Solar Panels and Hybrid Inverters</option>
+              <option value="TNPA/2026/10/0002/115049/R - Freedom Won Lithium Batteries (10)" data-rfq="TNPA/2026/10/0002/115049/R">TNPA/2026/10/0002/115049/R - Freedom Won Lithium Batteries (10)</option>
+              <option value="TNPA/2026/10/0002/115049/R - Enertec Solar Panels and Truck Batteries" data-rfq="TNPA/2026/10/0002/115049/R">TNPA/2026/10/0002/115049/R - Enertec Solar Panels and Truck Batteries</option>
+              <option value="TNPA/2026/10/0002/115049/R - Hitachi Wheel Loaders and Excavators" data-rfq="TNPA/2026/10/0002/115049/R">TNPA/2026/10/0002/115049/R - Hitachi Wheel Loaders and Excavators</option>
               <option value="GENERAL_VENDOR_REGISTRATION">GENERAL - Vendor Registration &amp; Compliance Documents</option>
             </select>
           </div>
@@ -554,12 +559,11 @@
     const rfqParam = urlParams.get('rfq');
     if (rfqParam) {
       const select = document.getElementById('tenderRef');
-      for (let option of select.options) {
-        if (option.value.includes(rfqParam) || rfqParam.includes(option.value)) {
-          select.value = option.value;
-          break;
-        }
-      }
+      const options = Array.from(select.options).filter(o => o.value);
+      const exact = options.find(o => (o.dataset.rfq || o.value) === rfqParam);
+      const fuzzy = options.find(o => o.value.startsWith(rfqParam));
+      const chosen = exact || fuzzy;
+      if (chosen) select.value = chosen.value;
     }
   });
 

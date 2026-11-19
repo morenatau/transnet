@@ -258,6 +258,10 @@
     background:#8a8f98;opacity:.7;cursor:not-allowed;pointer-events:none;user-select:none;
   }
   .tender-dl.addendum{background:#c07a12;margin-left:6px;}
+  @media (min-width:701px){
+    .tender-table td[data-label="Document"] .tender-dl{margin-right:16px;}
+    .tender-table td[data-label="Document"] .tender-dl.addendum{margin-left:0;}
+  }
   @media (max-width:700px){
     .tender-table thead{display:none;}
     .tender-table, .tender-table tbody, .tender-table tr, .tender-table td{display:block;width:100%;}
